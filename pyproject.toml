@@ -1,0 +1,9 @@
+[tool.ruff]
+line-length = 110
+
+[tool.ruff.flake8-quotes]
+docstring-quotes = "double"
+inline-quotes = "single"
+
+[tool.ruff.format]
+quote-style = "single"
