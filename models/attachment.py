@@ -38,7 +38,11 @@ class AttachmentMethods:
         return self.attachment_content(self.id or self.contentId)
 
     def download(self, filename: str = None, path: Path = None):
-        return self.attachment_save(content_id=self.id or self.contentId, new_filename=filename, path=path)
+        if hasattr(self, 'id'):
+            content_id = self.id
+        if hasattr(self, 'contentId'):
+            content_id = self.contentId
+        return self.attachment_save(content_id=content_id, new_filename=filename, path=path)
 
 
 class AttachmentModel(BaseModel, AttachmentMethods):
@@ -49,9 +53,9 @@ class AttachmentModel(BaseModel, AttachmentMethods):
     def attachment_content(self, content_id: str = None, url: str = None, **kwargs):
         FILENAME_MAX_LENGTH = 100
         if content_id:
-            url = self.URL_FILESTORE_IMAGE + content_id
+            url = config.URL_FILESTORE + content_id
 
-        response = self.req.get(url, **kwargs)
+        response = requests.get(url, **kwargs)
         filename_content = requests.utils.unquote(
             list(
                 filter(
