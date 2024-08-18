@@ -1,6 +1,6 @@
 *.txt
 test.py
-
+download/
 
 __pycache__/
 *.py[cod]
