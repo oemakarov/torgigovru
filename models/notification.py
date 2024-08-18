@@ -1,51 +1,10 @@
-# from datetime import date, datetime
-
 import datetime
 from typing import Any, Optional, Union
 
-import requests
 from pydantic import BaseModel
 
 import config
-
-
-class AttachmentMethods:
-    def attachment_content(self, content_id: str, **kwargs):
-        response = requests.get(config.URL_FILESTORE + content_id, verify=False, **kwargs)
-        content_filename = requests.utils.unquote(
-            list(
-                filter(
-                    lambda x: x.startswith('filename'),
-                    response.headers.get('Content-Disposition', '').split('; '),
-                )
-            )[0].split("''")[1]
-        )
-        if response.content:
-            return content_filename, response.content
-        else:
-            return None, None
-
-    def attachment_save(self, content_id: str, new_filename: str = None, **kwargs):
-        content_filename, content = self.attachment_content(content_id, **kwargs)
-        filename = new_filename or content_filename
-        if content:
-            with open(filename, 'wb') as f:
-                f.write(content)
-                return True, filename
-        else:
-            return False, None
-
-    def get_attachment_content(self):
-        return self.attachment_content(self.id or self.contentId)
-
-    def download(self, filename: str = None):
-        return self.attachment_save(content_id=self.id or self.contentId, new_filename=filename)
-
-
-class AttachmentModel(BaseModel, AttachmentMethods):
-    contentId: str
-    URL: str
-    detachedSignature: str
+from models.attachment import AttachmentMethods, AttachmentModel
 
 
 class CodeModel(BaseModel):
@@ -218,17 +177,24 @@ class LotModel(BaseModel):
 
     @property
     def price_min_for(self) -> Optional[str]:
-        return self._item_name_by_code_startswith('DA_priceMinFor')
+        return self._item_value_name_by_code_startswith('DA_priceMinFor')
 
     @property
     def price_min_for_short(self) -> Optional[str]:
+        """make short variant for payment period
+        'Арендный платеж за год' - 'за год'
+        'Арендный платеж за месяц' - 'за месяц'
+
+        Returns:
+            Optional[str]: _description_
+        """
         if self.price_min_for is None:
             return None
         parts = self.price_min_for.split('Арендный платеж ')
         if len(parts) == 2:
             return parts[1]
         return self.price_min_for
-        # 'Арендный платеж за год' 'Арендный платеж за месяц'
+        
 
     @property
     def price_min_ready(self) -> Optional[str]:
@@ -254,7 +220,7 @@ class LotModel(BaseModel):
     def description(self) -> str:
         return self.lotDescription
 
-    def _item_name_by_code_startswith(self, start: str) -> Optional[AdditionalDetailModel]:
+    def _item_value_name_by_code_startswith(self, start: str) -> Optional[AdditionalDetailModel]:
         for item in self.additionalDetails:
             if item.code.startswith(start):
                 return item.value.name
