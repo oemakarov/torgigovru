@@ -1,12 +1,14 @@
 from pathlib import Path
-from pydantic import BaseModel
+from typing import Optional
+
 import requests
+from pydantic import BaseModel
 
 import config
 
 
 class AttachmentMethods:
-    def attachment_content(self, content_id: str, **kwargs):
+    def attachment_content(self, content_id: str, **kwargs) -> tuple[Optional[str], Optional[bytes]]:
         response = requests.get(config.URL_FILESTORE + content_id, verify=False, **kwargs)
         source_filename = requests.utils.unquote(
             list(
@@ -22,7 +24,9 @@ class AttachmentMethods:
         else:
             return None, None
 
-    def attachment_save(self, content_id: str, new_filename: str = None, path: Path = None, **kwargs):
+    def attachment_save(
+        self, content_id: str, new_filename: str = None, path: Path = None, **kwargs
+    ) -> tuple[bool, Optional[str]]:
         source_filename, content = self.attachment_content(content_id, **kwargs)
         filename = new_filename or source_filename
         if path:
@@ -34,10 +38,7 @@ class AttachmentMethods:
         else:
             return False, None
 
-    def get_bin_content(self):
-        return self.attachment_content(self.id or self.contentId)
-
-    def download(self, filename: str = None, path: Path = None):
+    def download(self, filename: str = None, path: Path = None) -> tuple[bool, Optional[str]]:
         if not any(hasattr(self, 'id'), hasattr(self, 'contentId')):
             raise AttributeError('No contentId or id attribute')
         content_id = getattr(self, 'id', getattr(self, 'contentId'))
