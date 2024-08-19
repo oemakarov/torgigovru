@@ -101,7 +101,7 @@ class LotModel(BaseModel):
         return self.price_min_for
 
     @property
-    def price_min_ready(self) -> Optional[str]:
+    def price_min_wperiod(self) -> Optional[str]:
         return f'{self.priceMin} ({self.price_min_for_short})'
 
     @property
@@ -124,14 +124,11 @@ class LotModel(BaseModel):
     def description(self) -> str:
         return self.lotDescription
 
-    def _item_value_name_by_code_startswith(self, start: str) -> Optional[AdditionalDetailModel]:
-        for item in self.additionalDetails:
-            if item.code.startswith(start):
-                return item.value.name
-        return None
-
     def _item_value_by_code_startswith(self, start: str) -> Optional[AdditionalDetailModel]:
         for item in self.additionalDetails:
             if item.code.startswith(start):
                 return item.value
         return None
+
+    def _item_value_name_by_code_startswith(self, start: str) -> Optional[AdditionalDetailModel]:
+        return getattr(self._item_value_by_code_startswith(start), 'name')
