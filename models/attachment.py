@@ -38,10 +38,9 @@ class AttachmentMethods:
         return self.attachment_content(self.id or self.contentId)
 
     def download(self, filename: str = None, path: Path = None):
-        if hasattr(self, 'id'):
-            content_id = self.id
-        if hasattr(self, 'contentId'):
-            content_id = self.contentId
+        if not any(hasattr(self, 'id'), hasattr(self, 'contentId')):
+            raise AttributeError('No contentId or id attribute')
+        content_id = getattr(self, 'id', getattr(self, 'contentId'))
         return self.attachment_save(content_id=content_id, new_filename=filename, path=path)
 
 
