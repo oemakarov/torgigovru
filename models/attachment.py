@@ -8,6 +8,12 @@ import config
 
 
 class AttachmentMethods:
+    def get_content_id(self):
+        for _id in ['id', 'contentId']:
+            if hasattr(self, _id):
+                return getattr(self, _id)
+        return None
+
     def attachment_content(self, content_id: str, **kwargs) -> tuple[Optional[str], Optional[bytes]]:
         response = requests.get(config.URL_FILESTORE + content_id, verify=False, **kwargs)
         source_filename = requests.utils.unquote(
@@ -39,10 +45,9 @@ class AttachmentMethods:
             return False, None
 
     def download(self, filename: str = None, path: Path = None) -> tuple[bool, Optional[str]]:
-        if not any(hasattr(self, 'id'), hasattr(self, 'contentId')):
+        if not any([hasattr(self, 'id'), hasattr(self, 'contentId')]):
             raise AttributeError('No contentId or id attribute')
-        content_id = getattr(self, 'id', getattr(self, 'contentId'))
-        return self.attachment_save(content_id=content_id, new_filename=filename, path=path)
+        return self.attachment_save(content_id=self.get_content_id(), new_filename=filename, path=path)
 
 
 class AttachmentModel(BaseModel, AttachmentMethods):
